@@ -246,6 +246,7 @@
     { name: 'Madelyn', hue: 98  },
     { name: 'Mahima',  hue: 268 },
     { name: 'Em',      hue: 165 },
+    { name: 'Karim',   hue: 345 },
   ];
   const colorOf = name => {
     const p = PEOPLE.find(p => p.name === name);
@@ -283,6 +284,9 @@
 
     { name:'Em',      day:0, start:'13:00', end:'17:00' },
     { name:'Em',      day:2, start:'13:00', end:'17:00' },
+
+    { name:'Karim',   day:0, start:'14:00', end:'17:00' },
+    { name:'Karim',   day:3, start:'13:00', end:'14:45' },
   ].map(e => ({...e, startMin: toMin(e.start), endMin: toMin(e.end)}));
 
   // ---- Time axis ----
