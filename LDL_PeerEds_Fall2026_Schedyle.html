@@ -1,0 +1,421 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Office Hours Schedule</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg: #FAF7F2;
+    --card: #FFFFFF;
+    --ink: #23201B;
+    --ink-soft: #6B655C;
+    --line: #E7E1D6;
+    --line-strong: #D8D0C0;
+    --now-line: #C1443A;
+  }
+
+  *{ box-sizing: border-box; }
+
+  body{
+    margin: 0;
+    background: var(--bg);
+    color: var(--ink);
+    font-family: 'IBM Plex Sans', sans-serif;
+    padding: 40px 20px 60px;
+  }
+
+  .wrap{
+    max-width: 880px;
+    margin: 0 auto;
+  }
+
+  header h1{
+    font-family: 'Fraunces', serif;
+    font-weight: 500;
+    font-size: 40px;
+    letter-spacing: -0.01em;
+    margin: 0 0 6px;
+  }
+
+  header p{
+    margin: 0 0 28px;
+    color: var(--ink-soft);
+    font-size: 15px;
+  }
+
+  .legend{
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-bottom: 28px;
+  }
+
+  .chip{
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    padding: 7px 13px 7px 10px;
+    border-radius: 999px;
+    border: 1px solid var(--line-strong);
+    background: var(--card);
+    cursor: pointer;
+    font-size: 13.5px;
+    color: var(--ink);
+    transition: transform 0.12s ease, border-color 0.12s ease, opacity 0.12s ease;
+    user-select: none;
+  }
+
+  .chip:hover{ transform: translateY(-1px); }
+
+  .chip .dot{
+    width: 9px;
+    height: 9px;
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+
+  .chip.dimmed{ opacity: 0.4; }
+
+  .chip.active{
+    border-color: var(--chip-color, var(--ink));
+    background: color-mix(in srgb, var(--chip-color, var(--ink)) 8%, white);
+  }
+
+  .calendar{
+    display: flex;
+    background: var(--card);
+    border: 1px solid var(--line-strong);
+    border-radius: 14px;
+    overflow: hidden;
+  }
+
+  .time-axis{
+    width: 58px;
+    flex-shrink: 0;
+    border-right: 1px solid var(--line);
+    padding-top: 44px;
+    position: relative;
+  }
+
+  .time-label{
+    position: absolute;
+    right: 10px;
+    transform: translateY(-50%);
+    font-size: 11px;
+    color: var(--ink-soft);
+    font-variant-numeric: tabular-nums;
+  }
+
+  .days{
+    display: flex;
+    flex: 1;
+  }
+
+  .day-col{
+    flex: 1;
+    border-right: 1px solid var(--line);
+    position: relative;
+  }
+
+  .day-col:last-child{ border-right: none; }
+
+  .day-head{
+    height: 44px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 13px;
+    font-weight: 600;
+    letter-spacing: 0.02em;
+    border-bottom: 1px solid var(--line);
+    color: var(--ink);
+  }
+
+  .day-body{
+    position: relative;
+  }
+
+  .gridline{
+    position: absolute;
+    left: 0;
+    right: 0;
+    border-top: 1px solid var(--line);
+  }
+
+  .gridline.hour{ border-top-color: var(--line-strong); }
+
+  .now-line{
+    position: absolute;
+    left: 0;
+    right: 0;
+    height: 0;
+    border-top: 1.5px solid var(--now-line);
+    z-index: 5;
+  }
+
+  .now-line::before{
+    content: '';
+    position: absolute;
+    left: -4px;
+    top: -3.5px;
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: var(--now-line);
+  }
+
+  .event{
+    position: absolute;
+    border-radius: 7px;
+    padding: 5px 7px;
+    color: white;
+    font-size: 11.5px;
+    line-height: 1.25;
+    overflow: hidden;
+    cursor: default;
+    transition: opacity 0.15s ease, filter 0.15s ease;
+  }
+
+  .event .name{ font-weight: 600; }
+  .event .time{ opacity: 0.85; font-size: 10.5px; }
+
+  .event.dimmed{ opacity: 0.16; }
+
+  .event:hover .tooltip{ display: block; }
+
+  .tooltip{
+    display: none;
+    position: absolute;
+    bottom: calc(100% + 6px);
+    left: 0;
+    background: var(--ink);
+    color: white;
+    padding: 6px 9px;
+    border-radius: 6px;
+    font-size: 11.5px;
+    white-space: nowrap;
+    z-index: 10;
+    pointer-events: none;
+  }
+
+  footer{
+    margin-top: 20px;
+    font-size: 12.5px;
+    color: var(--ink-soft);
+  }
+
+  @media (max-width: 640px){
+    header h1{ font-size: 30px; }
+    .event .time{ display: none; }
+    .time-label{ font-size: 9.5px; right: 6px; }
+    .time-axis{ width: 42px; }
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>Office Hours</h1>
+    <p>Weekly in person schedule. Tap a name to spotlight their hours.</p>
+  </header>
+  <div class="legend" id="legend"></div>
+  <div class="calendar">
+    <div class="time-axis" id="timeAxis"></div>
+    <div class="days" id="days"></div>
+  </div>
+</div>
+
+<script>
+  // ---- Data ----
+  const DAY_NAMES = ['Monday','Tuesday','Wednesday','Thursday'];
+  const DAY_OF_WEEK = [1,2,3,4]; // JS getDay(): Mon=1 ... Thu=4
+
+  const START_MIN = 13*60;      // 1:00 PM
+  const END_MIN   = 17*60+30;   // 5:30 PM
+
+  const PEOPLE = [
+    { name: 'Kayla',   hue: 8   },
+    { name: 'Natasha', hue: 200 },
+    { name: 'David',   hue: 38  },
+    { name: 'Ujjwal',  hue: 222 },
+    { name: 'Claire',  hue: 322 },
+    { name: 'Madelyn', hue: 98  },
+    { name: 'Mahima',  hue: 268 },
+    { name: 'Em',      hue: 165 },
+  ];
+  const colorOf = name => {
+    const p = PEOPLE.find(p => p.name === name);
+    return `hsl(${p.hue}, 46%, 40%)`;
+  };
+
+  const toMin = t => {
+    const [h,m] = t.split(':').map(Number);
+    return h*60+m;
+  };
+
+  // day index: 0=Mon,1=Tue,2=Wed,3=Thu
+  const EVENTS = [
+    { name:'Kayla',   day:1, start:'15:00', end:'17:00' },
+    { name:'Kayla',   day:2, start:'13:00', end:'17:00' },
+
+    { name:'Natasha', day:0, start:'14:00', end:'17:00' },
+    { name:'Natasha', day:2, start:'14:00', end:'17:00' },
+
+    { name:'David',   day:1, start:'13:00', end:'14:45' },
+    { name:'David',   day:3, start:'13:00', end:'14:45' },
+
+    { name:'Ujjwal',  day:1, start:'13:00', end:'17:00' },
+    { name:'Ujjwal',  day:2, start:'15:00', end:'17:00' },
+
+    { name:'Claire',  day:1, start:'13:00', end:'17:00' },
+    { name:'Claire',  day:3, start:'15:00', end:'17:00' },
+
+    { name:'Madelyn', day:0, start:'13:00', end:'17:00' },
+    { name:'Madelyn', day:2, start:'13:00', end:'17:00' },
+
+    { name:'Mahima',  day:0, start:'13:00', end:'17:00' },
+    { name:'Mahima',  day:1, start:'13:00', end:'15:00' },
+    { name:'Mahima',  day:3, start:'13:00', end:'15:00' },
+
+    { name:'Em',      day:0, start:'13:00', end:'17:00' },
+    { name:'Em',      day:2, start:'13:00', end:'17:00' },
+  ].map(e => ({...e, startMin: toMin(e.start), endMin: toMin(e.end)}));
+
+  // ---- Time axis ----
+  const timeAxis = document.getElementById('timeAxis');
+  const totalMin = END_MIN - START_MIN;
+  const ROW_H = 46; // px per 30 min
+  const bodyHeight = (totalMin/30) * ROW_H;
+
+  for (let m = START_MIN; m <= END_MIN; m += 30) {
+    const pct = (m-START_MIN)/totalMin;
+    const label = document.createElement('div');
+    label.className = 'time-label';
+    label.style.top = (44 + pct*bodyHeight) + 'px';
+    const h = Math.floor(m/60), mm = m%60;
+    const h12 = ((h+11)%12)+1;
+    label.textContent = mm===0 ? `${h12}:00` : `${h12}:${mm}`;
+    timeAxis.appendChild(label);
+  }
+
+  // ---- Day columns with greedy overlap packing ----
+  const daysEl = document.getElementById('days');
+
+  DAY_NAMES.forEach((dayName, dayIdx) => {
+    const col = document.createElement('div');
+    col.className = 'day-col';
+
+    const head = document.createElement('div');
+    head.className = 'day-head';
+    head.textContent = dayName;
+    col.appendChild(head);
+
+    const body = document.createElement('div');
+    body.className = 'day-body';
+    body.style.height = bodyHeight + 'px';
+
+    // gridlines every 30 min, thicker on the hour
+    for (let m = START_MIN; m <= END_MIN; m += 30) {
+      const pct = (m-START_MIN)/totalMin;
+      const gl = document.createElement('div');
+      gl.className = 'gridline' + (m%60===0 ? ' hour' : '');
+      gl.style.top = (pct*bodyHeight) + 'px';
+      body.appendChild(gl);
+    }
+
+    // events for this day, greedy column packing
+    const dayEvents = EVENTS.filter(e => e.day === dayIdx).sort((a,b)=>a.startMin-b.startMin);
+    const columns = []; // array of arrays of events
+    dayEvents.forEach(e => {
+      let placed = false;
+      for (const col2 of columns) {
+        if (col2[col2.length-1].endMin <= e.startMin) { col2.push(e); e.col = columns.indexOf(col2); placed = true; break; }
+      }
+      if (!placed) { columns.push([e]); e.col = columns.length-1; }
+    });
+    const totalCols = Math.max(columns.length, 1);
+
+    dayEvents.forEach(e => {
+      const top = ((e.startMin-START_MIN)/totalMin)*bodyHeight;
+      const height = ((e.endMin-e.startMin)/totalMin)*bodyHeight;
+      const width = 100/totalCols;
+      const left = e.col*width;
+
+      const div = document.createElement('div');
+      div.className = 'event';
+      div.dataset.person = e.name;
+      div.style.top = top + 'px';
+      div.style.height = (height-3) + 'px';
+      div.style.left = `calc(${left}% + 3px)`;
+      div.style.width = `calc(${width}% - 6px)`;
+      div.style.background = colorOf(e.name);
+
+      const fmt = m => {
+        const h = Math.floor(m/60), mm = m%60;
+        const h12 = ((h+11)%12)+1;
+        const ap = m < 12*60 || m >= 24*60 ? 'AM' : 'PM';
+        return mm===0 ? `${h12} ${ap}` : `${h12}:${String(mm).padStart(2,'0')} ${ap}`;
+      };
+
+      div.innerHTML = `
+        <div class="name">${e.name}</div>
+        <div class="time">${fmt(e.startMin)} to ${fmt(e.endMin)}</div>
+        <div class="tooltip">${e.name}, ${dayName}, ${fmt(e.startMin)} to ${fmt(e.endMin)}</div>
+      `;
+      body.appendChild(div);
+    });
+
+    col.appendChild(body);
+    daysEl.appendChild(col);
+  });
+
+  // ---- Now line (only if today is Mon-Thu and within range) ----
+  const now = new Date();
+  const dow = now.getDay();
+  if (DAY_OF_WEEK.includes(dow)) {
+    const dayIdx = DAY_OF_WEEK.indexOf(dow);
+    const nowMin = now.getHours()*60 + now.getMinutes();
+    if (nowMin >= START_MIN && nowMin <= END_MIN) {
+      const targetCol = daysEl.children[dayIdx];
+      const body = targetCol.querySelector('.day-body');
+      const pct = (nowMin-START_MIN)/totalMin;
+      const line = document.createElement('div');
+      line.className = 'now-line';
+      line.style.top = (pct*bodyHeight) + 'px';
+      body.appendChild(line);
+    }
+  }
+
+  // ---- Legend + spotlight interaction ----
+  const legend = document.getElementById('legend');
+  let activePerson = null;
+
+  PEOPLE.forEach(p => {
+    const chip = document.createElement('div');
+    chip.className = 'chip';
+    chip.style.setProperty('--chip-color', colorOf(p.name));
+    chip.innerHTML = `<span class="dot" style="background:${colorOf(p.name)}"></span>${p.name}`;
+    chip.addEventListener('click', () => {
+      activePerson = activePerson === p.name ? null : p.name;
+      applySpotlight();
+    });
+    legend.appendChild(chip);
+  });
+
+  function applySpotlight() {
+    document.querySelectorAll('.chip').forEach(c => {
+      const name = c.textContent.trim();
+      c.classList.toggle('active', activePerson === name);
+      c.classList.toggle('dimmed', activePerson !== null && activePerson !== name);
+    });
+    document.querySelectorAll('.event').forEach(ev => {
+      ev.classList.toggle('dimmed', activePerson !== null && ev.dataset.person !== activePerson);
+    });
+  }
+</script>
+</body>
+</html>
